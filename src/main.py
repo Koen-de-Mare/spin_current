@@ -10,7 +10,7 @@ sys = make_system()
 
 print(sys.stability())
 
-for i in range(5):
-    for j in range(100):
+for i in range(10):
+    for j in range(5):
         sys.step()
     sys.plot()
