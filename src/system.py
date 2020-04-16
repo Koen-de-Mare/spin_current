@@ -1,7 +1,25 @@
 import matplotlib.pyplot as plt
 
+import math
+import random
 
 from src.material import Material
+
+
+electrons_per_packet = 0.01  # (nm^-2)
+vf = 1.0  # (nm fs^-1)
+penetration_depth = 10.0  # (nm)
+photon_energy = 1.0  # (eV)
+
+lifetime_up = 100.0  # (fs)
+lifetime_dn = 0.0  # (fs)
+
+
+class HotElectronPacket:
+    def __init__(self):
+        self.is_up = True
+        self.z = 0.0
+        self.vz = 0.0
 
 
 class System:
@@ -9,6 +27,7 @@ class System:
         # state
         self.gamma_list = []
         self.t = 0.0
+        self.hot_list = []
 
         # properties
         self.num_slices = 0
@@ -16,11 +35,24 @@ class System:
         self.material = Material()
         self.dt = 0.0  # (fs)
 
+
     def step(self):
         self.t += self.dt
         xi = self.material.xi()
 
-        # "current"
+        # transport of hot electrons -----------------------------------------------------------------------------------
+        # for hot_electron in self.hot_list:
+        #    hot_electron.z += hot_electron.vz * self.dt
+        #    if hot_electron.z < 0.0:
+        #        hot_electron.z = -hot_electron.z
+        #        hot_electron.vz = -hot_electron.vz
+        #    if hot_electron.z > self.slice_length * self.num_slices:
+        #        hot_electron.z = 2 * self.slice_length * self.num_slices - hot_electron.z
+        #        hot_electron.vz = -hot_electron.vz
+
+        # motion of thermal electrons ----------------------------------------------------------------------------------
+
+        # "gamma current"
         j_list = [0.0] * (self.num_slices - 1)
 
         for i in range(self.num_slices - 1):
@@ -39,6 +71,108 @@ class System:
         for i in range(0, self.num_slices):
             self.gamma_list[i] += self.dt * gamma_prime[i]
 
+        # excitation and decay of hot electrons ------------------------------------------------------------------------
+
+        # accumulators for net excitation of thermal electrons
+        excited_packets_up = [0] * self.num_slices
+        excited_packets_dn = [0] * self.num_slices
+
+        new_hot_list = []
+
+        # decay
+        for i in range(len(self.hot_list)):
+            lifetime = 0
+            if self.hot_list[i].is_up:
+                lifetime = lifetime_up
+            else:
+                lifetime = lifetime_dn
+
+            if random.random() < math.exp(-self.dt / lifetime):
+                # keep packet
+                new_hot_list.append(self.hot_list[i])
+            else:
+                # remove packet
+                slice_index = math.floor(self.hot_list[i].z / self.slice_length)
+                if self.hot_list[i].is_up:
+                    excited_packets_up[slice_index] -= 1
+                else:
+                    excited_packets_dn[slice_index] -= 1
+
+
+        # excitation
+        fluence = 1.0 * math.exp(-self.t / 10.0)  # (eV nm^-2 fs^-1)
+
+        for i in range(self.num_slices):
+            # (eV nm^-2 fs^-1)
+            power_i = \
+                -fluence * \
+                math.exp(-self.slice_length * i / penetration_depth) * \
+                (math.exp(-self.slice_length / penetration_depth) - 1.0)
+
+            excited_packets_i = round(power_i * self.dt / (photon_energy * electrons_per_packet))
+            excited_packets_i_up = round(
+                excited_packets_i * self.material.ds_up / (self.material.ds_up + self.material.ds_dn)
+            )
+            excited_packets_i_dn = round(
+                excited_packets_i * self.material.ds_dn / (self.material.ds_up + self.material.ds_dn)
+            )
+
+            excited_packets_up[i] += excited_packets_i_up
+            excited_packets_dn[i] += excited_packets_i_dn
+
+            for j in range(excited_packets_i_up + excited_packets_i_dn):
+                new_packet = HotElectronPacket()
+
+                if j < excited_packets_i_up:
+                    new_packet.is_up = True
+                else:
+                    new_packet.is_dn = False
+                new_packet.z = self.slice_length * (i + random.random())
+                vz = vf * (2.0 * random.random() - 1.0)
+
+                new_hot_list.append(new_packet)
+
+        self.hot_list = new_hot_list
+
+        # apply the change in number of thermal electrons caused by excitation and decay
+        for i in range(self.num_slices):
+            self.gamma_list[i] += \
+                electrons_per_packet * (
+                    -excited_packets_up[i] / self.material.ds_up + excited_packets_dn[i] / self.material.ds_dn
+                )
+
+        print("step complete")
+
+    def make_data(self):
+        # hot electron density
+        hot_up = [0] * self.num_slices
+        hot_dn = [0] * self.num_slices
+
+        for packet in self.hot_list:
+            slice_index = math.floor(packet.z / self.slice_length)
+            if packet.is_up:
+                hot_up[slice_index] += electrons_per_packet
+            else:
+                hot_dn[slice_index] += electrons_per_packet
+
+        hot_tot = [0] * self.num_slices
+        mu0_hot_up = [0.0] * self.num_slices
+        mu0_hot_dn = [0.0] * self.num_slices
+
+        for i in range(self.num_slices):
+            hot_tot[i] = hot_up[i] + hot_dn[i]
+            mu0_hot_up[i] = hot_up[i] / (self.slice_length * self.material.ds_up)
+            mu0_hot_dn[i] = hot_dn[i] / (self.slice_length * self.material.ds_dn)
+
+        mu0_up = [0.0] * self.num_slices
+        mu0_dn = [0.0] * self.num_slices
+
+        for i in range(self.num_slices):
+            mu0_up[i] = (+self.gamma_list[i] * self.material.ds_dn - hot_tot[i] / self.slice_length)
+            mu0_dn[i] = (-self.gamma_list[i] * self.material.ds_up - hot_tot[i] / self.slice_length)
+
+        return (mu0_up, mu0_dn, mu0_hot_up, mu0_hot_dn)
+
     def make_ticks(self):
         ticks = []
         for i in range(self.num_slices):
@@ -47,9 +181,29 @@ class System:
 
     def plot(self):
         ticks = self.make_ticks()
+
+        (mu0_up, mu0_dn, mu0_hot_up, mu0_hot_dn) = self.make_data()
+
+        plt.figure(figsize=(9, 9))
+
+        plt.subplot(311)
         plt.plot(ticks, self.gamma_list)
-        plt.xlabel("depth (nm)")
         plt.ylabel("gamma (eV)")
+        plt.xlabel("z (nm)")
+        plt.axis([0, self.num_slices * self.slice_length, -0.001, 0.001])
+
+        plt.subplot(312)
+        plt.plot(ticks, mu0_up, ticks, mu0_hot_up)
+        plt.ylabel("mu_0 up (eV)")
+        plt.xlabel("z (nm)")
+        plt.axis([0, self.num_slices * self.slice_length, -0.1, 0.1])
+
+        plt.subplot(313)
+        plt.plot(ticks, mu0_dn, ticks, mu0_hot_dn)
+        plt.ylabel("mu_0 dn (eV)")
+        plt.xlabel("z (nm)")
+        plt.axis([0, self.num_slices * self.slice_length, -0.1, 0.1])
+
         plt.show()
 
     def stability(self) -> float:

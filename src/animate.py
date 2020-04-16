@@ -4,7 +4,8 @@ import matplotlib.animation as animation
 from src.system import *
 
 sys = make_system()
-sys.gamma_list[40] = 1.0
+#for i in range(10, 20):
+#    sys.gamma_list[i] = 1.0
 
 print(sys.stability())
 

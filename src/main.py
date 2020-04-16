@@ -6,11 +6,11 @@
 from src.system import *
 
 sys = make_system()
-sys.gamma_list[40] = 1.0
+#sys.gamma_list[40] = 0.01
 
 print(sys.stability())
 
-for i in range(10):
-    for j in range(50):
+for i in range(5):
+    for j in range(100):
         sys.step()
     sys.plot()
