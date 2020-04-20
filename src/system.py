@@ -79,7 +79,6 @@ class System:
             for j in range(jmin, jmax):
                 self.j_hot[j] += sign * electrons_per_packet
 
-
         # motion of thermal electrons ----------------------------------------------------------------------------------
         self.j_up = [0.0] * (self.num_slices - 1)
         self.j_dn = [0.0] * (self.num_slices - 1)
@@ -96,7 +95,7 @@ class System:
             self.j_up[i] = j_up_0_i - self.material.alpha_up * ee_i
             self.j_dn[i] = j_dn_0_i - self.material.alpha_dn * ee_i
 
-        # time derivative
+        # time derivative of gamma
         gamma_dot = [0.0] * self.num_slices
 
         for i in range(self.num_slices):
@@ -106,9 +105,9 @@ class System:
 
         for i in range(self.num_slices - 1):
             # gamma_flow is NIET een werkbaar concept als ds_sigma ruimte-afhankelijk is
-            gamma_flow = (self.j_up[i] / self.material.ds_up - self.j_dn[i] / self.material.ds_dn) / self.slice_length
-            gamma_dot[i] -= gamma_flow
-            gamma_dot[i + 1] += gamma_flow
+            gamma_flow = (-self.j_up[i] / self.material.ds_up + self.j_dn[i] / self.material.ds_dn) / self.slice_length
+            gamma_dot[i] += gamma_flow
+            gamma_dot[i + 1] -= gamma_flow
 
         for i in range(0, self.num_slices):
             self.gamma_list[i] += self.dt * gamma_dot[i]
