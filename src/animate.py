@@ -4,19 +4,13 @@ import matplotlib.animation as animation
 from src.system import *
 
 sys = make_system()
-#for i in range(10, 20):
-#    sys.gamma_list[i] = 1.0
-
-print(sys.stability())
-
-#gamma_lists = []
 states = []
 
 num_frames = 200
 for i in range(num_frames):
     print(i / num_frames)
-    sys.step()
-    #gamma_lists.append(sys.gamma_list.copy())
+    for j in range(2):
+        sys.step()
     states.append(sys.make_data())
 
 (ticks_slices, ticks_planes) = sys.make_ticks()
@@ -65,7 +59,6 @@ def update(n):
     line7.set_data(ticks_slices, hot_dn)
     line8.set_data(ticks_planes, j_hot)
     return [line1, line2, line3, line4, line5, line6, line7, line8]
-
 
 anim = animation.FuncAnimation(fig, update, num_frames, interval=100, blit=True)
 
