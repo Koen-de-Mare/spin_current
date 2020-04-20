@@ -218,7 +218,7 @@ def make_system():
     system.material.ds_dn = 30.0  # (eV^-1 nm^-3)
     system.material.alpha_up = 8.0  # (eV^-1 nm^-1 fs^-1)
     system.material.alpha_dn = 2.0  # (eV^-1 nm^-1 fs^-1)
-    system.material.tau = 100000000  # (NOT fs)
+    system.material.tau = 10  # (NOT fs)
 
     system.dt = 1.0
 

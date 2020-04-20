@@ -50,6 +50,11 @@ def update(n):
     return [line1, line2, line3, line4, line5]
 
 
-ani = animation.FuncAnimation(fig, update, num_frames, interval=100, blit=True)
+anim = animation.FuncAnimation(fig, update, num_frames, interval=100, blit=True)
 
-plt.show()
+show = True
+if show:
+    plt.show()
+else:
+    writer = animation.FFMpegWriter(fps=30.0)
+    anim.save("output/animation.mp4", writer=writer)
