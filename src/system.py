@@ -40,7 +40,9 @@ class System:
         self.hot_list = []
 
         # state dynamics
-        self.j_hot: [float] = []
+        #self.j_hot: [float] = []
+        self.j_hot_up: [float] = []
+        self.j_hot_dn: [float] = []
         self.j_up: [float] = []
         self.j_dn: [float] = []
 
@@ -55,7 +57,8 @@ class System:
         self.t += self.dt
 
         # transport of hot electrons -----------------------------------------------------------------------------------
-        self.j_hot = [0.0] * (self.num_slices - 1)
+        self.j_hot_up = [0.0] * (self.num_slices - 1)
+        self.j_hot_dn = [0.0] * (self.num_slices - 1)
 
         for i in range(len(self.hot_list)):
             hot_electron = self.hot_list[i]
@@ -83,8 +86,15 @@ class System:
             else:
                 sign = -1.0
 
-            for j in range(jmin, jmax):
-                self.j_hot[j] += sign * electrons_per_packet
+            #for j in range(jmin, jmax):
+            #    self.j_hot[j] += sign * electrons_per_packet
+
+            if hot_electron.is_up:
+                for j in range(jmin, jmax):
+                    self.j_hot_up[j] += sign * electrons_per_packet
+            else:
+                for j in range(jmin, jmax):
+                    self.j_hot_dn[j] += sign * electrons_per_packet
 
         # motion of thermal electrons ----------------------------------------------------------------------------------
         self.j_up = [0.0] * (self.num_slices - 1)
@@ -105,7 +115,7 @@ class System:
                 ) / self.slice_length
 
             ee_i = \
-                (j_up_0_i + j_dn_0_i + self.j_hot[i]) / \
+                (j_up_0_i + j_dn_0_i + self.j_hot_up[i] + self.j_hot_dn[i]) / \
                 (self.plane_property_list[i].alpha_up + self.plane_property_list[i].alpha_dn)
 
             self.j_up[i] = j_up_0_i - self.plane_property_list[i].alpha_up * ee_i
@@ -239,7 +249,12 @@ class System:
                             hot_tot[i] / self.slice_length
                         ) / ds_tot_i
 
-        return (self.gamma_list.copy(), mu0_up, mu0_dn, hot_up, hot_dn, mu0_hot_up, mu0_hot_dn, self.j_hot, self.j_up, self.j_dn)
+        j_spin = [0.0] * (self.num_slices - 1)
+
+        for i in range(self.num_slices - 1):
+            j_spin[i] = self.j_hot_up[i] + self.j_up[i] - self.j_hot_dn[i] - self.j_dn[i]
+
+        return (self.gamma_list.copy(), mu0_up, mu0_dn, hot_up, hot_dn, mu0_hot_up, mu0_hot_dn, self.j_hot_up, self.j_hot_dn, self.j_up, self.j_dn, j_spin)
 
     def make_ticks(self):
         ticks_slices = []
@@ -282,14 +297,14 @@ class System:
 def make_system():
     system = System()
 
-    system.num_slices = 60
-    system.slice_length = 0.5  # (nm)
+    system.num_slices = 30
+    system.slice_length = 1.0  # (nm)
     system.gamma_list = [0.0] * system.num_slices
 
     slice_properties_1 = SliceProperties()
     slice_properties_1.ds_up = 70.0  # (eV^-1 nm^-3)
     slice_properties_1.ds_dn = 30.0  # (eV^-1 nm^-3)
-    slice_properties_1.tau = 10  # (NOT fs)
+    slice_properties_1.tau = 100  # (NOT fs)
 
     slice_properties_2 = SliceProperties()
     slice_properties_2.ds_up = 30.0  # (eV^-1 nm^-3)
@@ -297,18 +312,18 @@ def make_system():
     slice_properties_2.tau = 100  # (NOT fs)
 
     plane_properties_1 = PlaneProperties()
-    plane_properties_1.alpha_up = 8.0  # (eV^-1 nm^-1 fs^-1)
-    plane_properties_1.alpha_dn = 4.0  # (eV^-1 nm^-1 fs^-1)
+    plane_properties_1.alpha_up = 12.0  # (eV^-1 nm^-1 fs^-1)
+    plane_properties_1.alpha_dn = 2.0  # (eV^-1 nm^-1 fs^-1)
 
     plane_properties_2 = PlaneProperties()
     plane_properties_2.alpha_up = 0.4  # (eV^-1 nm^-1 fs^-1)
     plane_properties_2.alpha_dn = 0.4  # (eV^-1 nm^-1 fs^-1)
 
-    system.slice_property_list = [slice_properties_1] * 30
-    system.slice_property_list.extend([slice_properties_2] * 30)
+    system.slice_property_list = [slice_properties_1] * 15
+    system.slice_property_list.extend([slice_properties_2] * 15)
 
-    system.plane_property_list = [plane_properties_1] * 30
-    system.plane_property_list.extend([plane_properties_2] * 29)
+    system.plane_property_list = [plane_properties_1] * 15
+    system.plane_property_list.extend([plane_properties_2] * 14)
 
     system.dt = 0.2
 
