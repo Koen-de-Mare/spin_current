@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import math
 import random
 
-electrons_per_packet = 0.001  # (nm^-2)
+electrons_per_packet = 0.0001  # (nm^-2)
 vf = 1.0  # (nm fs^-1)
 penetration_depth = 5.0  # (nm)
 photon_energy = 1.0  # (eV)
@@ -15,39 +15,41 @@ lifetime_dn = 10.0  # (fs)
 class HotElectronPacket:
     def __init__(self):
         self.is_up = True
-        self.z = 0.0
-        self.vz = 0.0
+        self.z = 0.0  # (nm)
+        self.vz = 0.0  # (nm fs^-1)
 
 
 class SliceProperties:
     def __init__(self):
-        self.ds_up = 0
-        self.ds_dn = 0
-        self.tau = 0
+        self.ds_up = 0  # (eV^-1 nm^-3)
+        self.ds_dn = 0  # (eV^-1 nm^-3
+        self.tau = 0  # (eV nm^3 fs)
+
+    def timescale(self) -> float:
+        return self.tau * self.ds_up * self.ds_dn / (self.ds_up + self.ds_dn)  # (fs)
 
 
 class PlaneProperties:
     def __init__(self):
-        self.alpha_up = 0
-        self.alpha_dn = 0
+        self.alpha_up = 0  # (fs^-1 nm^-1 eV^-1)
+        self.alpha_dn = 0  # (fs^-1 nm^-1 eV^-1)
 
 
 class System:
     def __init__(self):
         # state
-        self.gamma_list: [float] = []
-        self.t: float = 0.0
+        self.gamma_list: [float] = []  # (eV)
+        self.t: float = 0.0  # (fs)
         self.hot_list = []
 
         # state dynamics
-        #self.j_hot: [float] = []
-        self.j_hot_up: [float] = []
-        self.j_hot_dn: [float] = []
-        self.j_up: [float] = []
-        self.j_dn: [float] = []
+        self.j_hot_up: [float] = []  # (nm^-2 fs^-1)
+        self.j_hot_dn: [float] = []  # (nm^-2 fs^-1)
+        self.j_up: [float] = []  # (nm^-2 fs^-1)
+        self.j_dn: [float] = []  # (nm^-2 fs^-1)
 
         # properties
-        self.num_slices = 0
+        self.num_slices = 0  # (1)
         self.slice_length: float = 0.0  # (nm)
         self.slice_property_list: [SliceProperties] = []
         self.plane_property_list: [PlaneProperties] = []
@@ -57,8 +59,8 @@ class System:
         self.t += self.dt
 
         # transport of hot electrons -----------------------------------------------------------------------------------
-        self.j_hot_up = [0.0] * (self.num_slices - 1)
-        self.j_hot_dn = [0.0] * (self.num_slices - 1)
+        self.j_hot_up = [0.0] * (self.num_slices - 1)  # (nm^-2 fs^-1)
+        self.j_hot_dn = [0.0] * (self.num_slices - 1)  # (nm^-2 fs^-1)
 
         for i in range(len(self.hot_list)):
             hot_electron = self.hot_list[i]
@@ -72,10 +74,10 @@ class System:
                 hot_electron.vz = -hot_electron.vz
             z1 = hot_electron.z
 
-            zmin = min(z0, z1)
-            jmin = math.ceil(zmin / self.slice_length - 1.0)
-            zmax = max(z0, z1)
-            jmax = math.ceil(zmax / self.slice_length - 1.0)
+            zmin = min(z0, z1)  # (nm)
+            jmin = math.ceil(zmin / self.slice_length - 1.0)  # (1)
+            zmax = max(z0, z1)  # (nm)
+            jmax = math.ceil(zmax / self.slice_length - 1.0)  # (1)
 
             assert(jmin >= 0)
             assert(jmax < self.num_slices)
@@ -86,19 +88,16 @@ class System:
             else:
                 sign = -1.0
 
-            #for j in range(jmin, jmax):
-            #    self.j_hot[j] += sign * electrons_per_packet
-
             if hot_electron.is_up:
                 for j in range(jmin, jmax):
-                    self.j_hot_up[j] += sign * electrons_per_packet
+                    self.j_hot_up[j] += sign * electrons_per_packet / self.dt  # (nm^-2 fs^-1)
             else:
                 for j in range(jmin, jmax):
-                    self.j_hot_dn[j] += sign * electrons_per_packet
+                    self.j_hot_dn[j] += sign * electrons_per_packet / self.dt  # (nm^-2 fs^-1)
 
         # motion of thermal electrons ----------------------------------------------------------------------------------
-        self.j_up = [0.0] * (self.num_slices - 1)
-        self.j_dn = [0.0] * (self.num_slices - 1)
+        self.j_up = [0.0] * (self.num_slices - 1)  # (nm^-2 fs^-1)
+        self.j_dn = [0.0] * (self.num_slices - 1)  # (nm^-2 fs^-1)
 
         for i in range(self.num_slices - 1):
             j_up_0_i = -self.plane_property_list[i].alpha_up * (
@@ -106,49 +105,49 @@ class System:
                         (self.slice_property_list[i+1].ds_up + self.slice_property_list[i+1].ds_dn) -
                     self.gamma_list[ i ] * self.slice_property_list[ i ].ds_dn /
                         (self.slice_property_list[ i ].ds_up + self.slice_property_list[ i ].ds_dn)
-                ) / self.slice_length
+                ) / self.slice_length  # (fs^-1 nm^-2)
             j_dn_0_i = +self.plane_property_list[i].alpha_dn * (
                     self.gamma_list[i+1] * self.slice_property_list[i+1].ds_up /
                         (self.slice_property_list[i+1].ds_up + self.slice_property_list[i+1].ds_dn) -
                     self.gamma_list[ i ] * self.slice_property_list[ i ].ds_up /
                         (self.slice_property_list[ i ].ds_up + self.slice_property_list[ i ].ds_dn)
-                ) / self.slice_length
+                ) / self.slice_length  # (fs^-1 nm^-2)
 
             ee_i = \
                 (j_up_0_i + j_dn_0_i + self.j_hot_up[i] + self.j_hot_dn[i]) / \
-                (self.plane_property_list[i].alpha_up + self.plane_property_list[i].alpha_dn)
+                (self.plane_property_list[i].alpha_up + self.plane_property_list[i].alpha_dn)  # (eV nm^-1)
 
-            self.j_up[i] = j_up_0_i - self.plane_property_list[i].alpha_up * ee_i
-            self.j_dn[i] = j_dn_0_i - self.plane_property_list[i].alpha_dn * ee_i
+            self.j_up[i] = j_up_0_i - self.plane_property_list[i].alpha_up * ee_i  # (fs^-1 nm^-2)
+            self.j_dn[i] = j_dn_0_i - self.plane_property_list[i].alpha_dn * ee_i  # (fs^-1 nm^-2)
 
         # time derivative of gamma
-        gamma_dot = [0.0] * self.num_slices
+        gamma_dot = [0.0] * self.num_slices  # (eV fs^-1)
 
         for i in range(self.num_slices):
             gamma_dot[i] -= self.gamma_list[i] * (
                 1.0 / self.slice_property_list[i].ds_up + 1.0 / self.slice_property_list[i].ds_dn
-            ) / self.slice_property_list[i].tau
+            ) / self.slice_property_list[i].tau  # (eV fs^-1)
 
         for i in range(self.num_slices - 1):
             gamma_dot[i] += \
                 (
                     -self.j_up[i] / self.slice_property_list[i].ds_up +
                      self.j_dn[i] / self.slice_property_list[i].ds_dn
-                ) / self.slice_length
+                ) / self.slice_length  # (eV fs^-1)
             gamma_dot[i + 1] += \
                 (
                     self.j_up[i] / self.slice_property_list[i+1].ds_up -
                     self.j_dn[i] / self.slice_property_list[i+1].ds_dn
-                ) / self.slice_length
+                ) / self.slice_length  # (eV fs^-1)
 
         for i in range(0, self.num_slices):
-            self.gamma_list[i] += self.dt * gamma_dot[i]
+            self.gamma_list[i] += self.dt * gamma_dot[i]  # (eV)
 
         # excitation and decay of hot electrons ------------------------------------------------------------------------
 
         # accumulators for net excitation of thermal electrons
-        excited_packets_up = [0] * self.num_slices
-        excited_packets_dn = [0] * self.num_slices
+        excited_packets_up = [0] * self.num_slices  # (1)
+        excited_packets_dn = [0] * self.num_slices  # (1)
 
         new_hot_list = []
 
@@ -156,9 +155,9 @@ class System:
         for i in range(len(self.hot_list)):
             lifetime = 0
             if self.hot_list[i].is_up:
-                lifetime = lifetime_up
+                lifetime = lifetime_up  # (fs)
             else:
-                lifetime = lifetime_dn
+                lifetime = lifetime_dn  # (fs)
 
             if random.random() < math.exp(-self.dt / lifetime):
                 # keep packet
@@ -167,12 +166,12 @@ class System:
                 # remove packet
                 slice_index = math.floor(self.hot_list[i].z / self.slice_length)
                 if self.hot_list[i].is_up:
-                    excited_packets_up[slice_index] -= 1
+                    excited_packets_up[slice_index] -= 1  # (1)
                 else:
-                    excited_packets_dn[slice_index] -= 1
+                    excited_packets_dn[slice_index] -= 1  # (1)
 
         # excitation
-        fluence = 10.0 * math.exp(-self.t / 10.0)  # (eV nm^-2 fs^-1)
+        fluence = 5.0 * math.exp(-self.t / 10.0)  # (eV nm^-2 fs^-1)
 
         for i in range(self.num_slices):
             ds_tot_i = self.slice_property_list[i].ds_up + self.slice_property_list[i].ds_dn
@@ -183,23 +182,23 @@ class System:
                 math.exp(-self.slice_length * i / penetration_depth) * \
                 (math.exp(-self.slice_length / penetration_depth) - 1.0)
 
-            excited_packets_i = round(power_i * self.dt / (photon_energy * electrons_per_packet))
+            excited_packets_i = power_i * self.dt / (photon_energy * electrons_per_packet)  # (1), NOT a natural number
             excited_packets_i_up = round(
-                excited_packets_i * self.slice_property_list[i].ds_up / ds_tot_i
+                excited_packets_i * self.slice_property_list[i].ds_up / ds_tot_i  # (1)
             )
             excited_packets_i_dn = round(
-                excited_packets_i * self.slice_property_list[i].ds_dn / ds_tot_i
+                excited_packets_i * self.slice_property_list[i].ds_dn / ds_tot_i  # (1)
             )
 
-            excited_packets_up[i] += excited_packets_i_up
-            excited_packets_dn[i] += excited_packets_i_dn
+            excited_packets_up[i] += excited_packets_i_up  # (1)
+            excited_packets_dn[i] += excited_packets_i_dn  # (1)
 
             for j in range(excited_packets_i_up + excited_packets_i_dn):
                 new_packet = HotElectronPacket()
 
                 new_packet.is_up = j < excited_packets_i_up
-                new_packet.z = self.slice_length * (i + random.random())
-                new_packet.vz = vf * (2.0 * random.random() - 1.0)
+                new_packet.z = self.slice_length * (i + random.random())  # (nm)
+                new_packet.vz = vf * (2.0 * random.random() - 1.0)  # (nm fs^-1)
 
                 new_hot_list.append(new_packet)
 
@@ -211,48 +210,46 @@ class System:
                 electrons_per_packet * (
                     -excited_packets_up[i] / self.slice_property_list[i].ds_up +
                     excited_packets_dn[i] / self.slice_property_list[i].ds_dn
-                )
+                ) / self.slice_length  # (eV)
 
     def make_data(self):
-        # hot electron density
-        hot_up = [0] * self.num_slices
-        hot_dn = [0] * self.num_slices
+        # hot electron density -----------------------------------------------------------------------------------------
+        hot_up = [0] * self.num_slices  # (nm^-3)
+        hot_dn = [0] * self.num_slices  # (nm^-3)
 
         for packet in self.hot_list:
             slice_index = math.floor(packet.z / self.slice_length)
             if packet.is_up:
-                hot_up[slice_index] += electrons_per_packet
+                hot_up[slice_index] += electrons_per_packet / self.slice_length
             else:
-                hot_dn[slice_index] += electrons_per_packet
+                hot_dn[slice_index] += electrons_per_packet / self.slice_length
 
-        hot_tot = [0] * self.num_slices
-        mu0_hot_up = [0.0] * self.num_slices
-        mu0_hot_dn = [0.0] * self.num_slices
-
-        for i in range(self.num_slices):
-            hot_tot[i] = hot_up[i] + hot_dn[i]
-            mu0_hot_up[i] = hot_up[i] / (self.slice_length * self.slice_property_list[i].ds_up)
-            mu0_hot_dn[i] = hot_dn[i] / (self.slice_length * self.slice_property_list[i].ds_dn)
-
-        mu0_up = [0.0] * self.num_slices
-        mu0_dn = [0.0] * self.num_slices
+        hot_tot = [0] * self.num_slices  # (nm^-3)
+        mu0_hot_up = [0.0] * self.num_slices  # (eV)
+        mu0_hot_dn = [0.0] * self.num_slices  # (eV)
 
         for i in range(self.num_slices):
-            ds_tot_i = self.slice_property_list[i].ds_up + self.slice_property_list[i].ds_dn
+            hot_tot[i] = hot_up[i] + hot_dn[i]  # (nm^-3)
+            mu0_hot_up[i] = hot_up[i] / self.slice_property_list[i].ds_up  # (eV)
+            mu0_hot_dn[i] = hot_dn[i] / self.slice_property_list[i].ds_dn  # (eV)
 
-            mu0_up[i] = (
-                            +self.gamma_list[i] * self.slice_property_list[i].ds_dn -
-                            hot_tot[i] / self.slice_length
-                        ) / ds_tot_i
-            mu0_dn[i] = (
-                            -self.gamma_list[i] * self.slice_property_list[i].ds_up -
-                            hot_tot[i] / self.slice_length
-                        ) / ds_tot_i
+        # mu0_sigma ----------------------------------------------------------------------------------------------------
 
-        j_spin = [0.0] * (self.num_slices - 1)
+        mu0_up = [0.0] * self.num_slices  # (eV)
+        mu0_dn = [0.0] * self.num_slices  # (eV)
+
+        for i in range(self.num_slices):
+            ds_tot_i = self.slice_property_list[i].ds_up + self.slice_property_list[i].ds_dn  # (eV^-1 nm^-3)
+
+            mu0_up[i] = ( self.gamma_list[i] * self.slice_property_list[i].ds_dn - hot_tot[i]) / ds_tot_i  # (eV)
+            mu0_dn[i] = (-self.gamma_list[i] * self.slice_property_list[i].ds_up - hot_tot[i]) / ds_tot_i  # (eV)
+
+        # j_spin -------------------------------------------------------------------------------------------------------
+
+        j_spin = [0.0] * (self.num_slices - 1)  # (nm^-2 fs^-1)
 
         for i in range(self.num_slices - 1):
-            j_spin[i] = self.j_hot_up[i] + self.j_up[i] - self.j_hot_dn[i] - self.j_dn[i]
+            j_spin[i] = self.j_hot_up[i] + self.j_up[i] - self.j_hot_dn[i] - self.j_dn[i]  # (nm^-2 fs^-1)
 
         return (self.gamma_list.copy(), mu0_up, mu0_dn, hot_up, hot_dn, mu0_hot_up, mu0_hot_dn, self.j_hot_up, self.j_hot_dn, self.j_up, self.j_dn, j_spin)
 
@@ -297,8 +294,10 @@ class System:
 def make_system():
     system = System()
 
-    system.num_slices = 30
-    system.slice_length = 1.0  # (nm)
+    N = 25
+
+    system.num_slices = 2 * N
+    system.slice_length = 15.0 / N  # (nm)
     system.gamma_list = [0.0] * system.num_slices
 
     slice_properties_1 = SliceProperties()
@@ -319,12 +318,12 @@ def make_system():
     plane_properties_2.alpha_up = 0.4  # (eV^-1 nm^-1 fs^-1)
     plane_properties_2.alpha_dn = 0.4  # (eV^-1 nm^-1 fs^-1)
 
-    system.slice_property_list = [slice_properties_1] * 15
-    system.slice_property_list.extend([slice_properties_2] * 15)
+    system.slice_property_list = [slice_properties_1] * N
+    system.slice_property_list.extend([slice_properties_2] * N)
 
-    system.plane_property_list = [plane_properties_1] * 15
-    system.plane_property_list.extend([plane_properties_2] * 14)
+    system.plane_property_list = [plane_properties_1] * N
+    system.plane_property_list.extend([plane_properties_2] * (N - 1))
 
-    system.dt = 0.2
+    system.dt = 0.25
 
     return system
