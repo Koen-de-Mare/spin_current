@@ -6,10 +6,10 @@ from src.system import *
 sys = make_system()
 states = []
 
-num_frames = 100
+num_frames = 200
 for i in range(num_frames):
     print(i / num_frames)
-    for j in range(2):
+    for j in range(1):
         sys.step()
     states.append(sys.make_data())
 
@@ -31,14 +31,14 @@ ax2.set_ylim(-0.1, 0.1)
 ax2.set_ylabel("mu_0 up\n(eV)")
 ax2.axhline(y=0, color='g')
 line2, = ax2.plot([], [], color="b")
-line3, = ax2.plot([], [], color="y")
+#line3, = ax2.plot([], [], color="y")
 
 ax3.set_xlim(0, sys.slice_length * sys.num_slices)
 ax3.set_ylim(-0.1, 0.1)
 ax3.set_ylabel("mu_0 dn\n(eV)")
 ax3.axhline(y=0, color='g')
 line4, = ax3.plot([], [], color="b")
-line5, = ax3.plot([], [], color="y")
+#line5, = ax3.plot([], [], color="y")
 
 ax4.set_xlim(0, sys.slice_length * sys.num_slices)
 ax4.set_ylabel("N_hot\n(nm^-3)")
@@ -63,15 +63,16 @@ line10, = ax6.plot([], [], color="r")
 def init():
     line1.set_data([], [])
     line2.set_data([], [])
-    line3.set_data([], [])
+    #line3.set_data([], [])
     line4.set_data([], [])
-    line5.set_data([], [])
+    #line5.set_data([], [])
     line6.set_data([], [])
     line7.set_data([], [])
     line8.set_data([], [])
     line9.set_data([], [])
     line10.set_data([], [])
-    return [line1, line2, line3, line4, line5, line6, line7, line8, line9, line10]
+    #return [line1, line2, line3, line4, line5, line6, line7, line8, line9, line10]
+    return [line1, line2, line4, line6, line7, line8, line9, line10]
 
 
 def update(n):
@@ -79,15 +80,16 @@ def update(n):
      j_up, j_dn, j_spin) = states[n]
     line1.set_data(ticks_slices, gamma)
     line2.set_data(ticks_slices, mu0_up)
-    line3.set_data(ticks_slices, mu0_hot_up)
+    #line3.set_data(ticks_slices, mu0_hot_up)
     line4.set_data(ticks_slices, mu0_dn)
-    line5.set_data(ticks_slices, mu0_hot_dn)
+    #line5.set_data(ticks_slices, mu0_hot_dn)
     line6.set_data(ticks_slices, hot_up)
     line7.set_data(ticks_slices, hot_dn)
     line8.set_data(ticks_planes, j_hot_up)
     line9.set_data(ticks_planes, j_hot_dn)
     line10.set_data(ticks_planes, j_spin)
-    return [line1, line2, line3, line4, line5, line6, line7, line8, line9, line10]
+    #return [line1, line2, line3, line4, line5, line6, line7, line8, line9, line10]
+    return [line1, line2, line4, line6, line7, line8, line9, line10]
 
 
 anim = animation.FuncAnimation(fig, update, init_func=init, frames=num_frames, interval=100, blit=True)

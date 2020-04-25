@@ -3,14 +3,6 @@ import matplotlib.pyplot as plt
 import math
 import random
 
-electrons_per_packet = 0.0001  # (nm^-2)
-vf = 1.0  # (nm fs^-1)
-penetration_depth = 5.0  # (nm)
-photon_energy = 1.0  # (eV)
-
-lifetime_up = 1000.0  # (fs)
-lifetime_dn = 10.0  # (fs)
-
 
 class HotElectronPacket:
     def __init__(self):
@@ -47,13 +39,29 @@ class System:
         self.j_hot_dn: [float] = []  # (nm^-2 fs^-1)
         self.j_up: [float] = []  # (nm^-2 fs^-1)
         self.j_dn: [float] = []  # (nm^-2 fs^-1)
+        self.fluence: float = 0.0  # (eV nm^-2 fs^-1)
 
-        # properties
+        # simulation properties
         self.num_slices = 0  # (1)
         self.slice_length: float = 0.0  # (nm)
+        self.dt: float = 0.0  # (fs)
+
+        # material properties
         self.slice_property_list: [SliceProperties] = []
         self.plane_property_list: [PlaneProperties] = []
-        self.dt = 0.0  # (fs)
+
+        # ballistic electron properties
+        self.electrons_per_packet:float = 0.0  # (nm^-2)
+        self.vf: float = 0.0  # (nm fs^-1)
+        self.lifetime_up: float = 0.0  # (fs)
+        self.lifetime_dn: float = 0.0  # (fs)
+
+        # laser properties
+        self.t0 = 0.0  # (fs)
+        self.pulse_duration = 0.0  # (fs)
+        self.peak_power = 0.0  # (eV nm^-2 fs^-1)
+        self.penetration_depth: float = 0.0  # (nm)
+        self.photon_energy = 0.0  # (eV)
 
     def step(self):
         self.t += self.dt
@@ -90,10 +98,10 @@ class System:
 
             if hot_electron.is_up:
                 for j in range(jmin, jmax):
-                    self.j_hot_up[j] += sign * electrons_per_packet / self.dt  # (nm^-2 fs^-1)
+                    self.j_hot_up[j] += sign * self.electrons_per_packet / self.dt  # (nm^-2 fs^-1)
             else:
                 for j in range(jmin, jmax):
-                    self.j_hot_dn[j] += sign * electrons_per_packet / self.dt  # (nm^-2 fs^-1)
+                    self.j_hot_dn[j] += sign * self.electrons_per_packet / self.dt  # (nm^-2 fs^-1)
 
         # motion of thermal electrons ----------------------------------------------------------------------------------
         self.j_up = [0.0] * (self.num_slices - 1)  # (nm^-2 fs^-1)
@@ -155,9 +163,9 @@ class System:
         for i in range(len(self.hot_list)):
             lifetime = 0
             if self.hot_list[i].is_up:
-                lifetime = lifetime_up  # (fs)
+                lifetime = self.lifetime_up  # (fs)
             else:
-                lifetime = lifetime_dn  # (fs)
+                lifetime = self.lifetime_dn  # (fs)
 
             if random.random() < math.exp(-self.dt / lifetime):
                 # keep packet
@@ -171,18 +179,19 @@ class System:
                     excited_packets_dn[slice_index] -= 1  # (1)
 
         # excitation
-        fluence = 5.0 * math.exp(-self.t / 10.0)  # (eV nm^-2 fs^-1)
+        self.fluence = self.peak_power * math.exp(-math.pow((self.t - self.t0) / self.pulse_duration, 2))
+        #fluence = 5.0 * math.exp(-self.t / self.pulse_length)  # (eV nm^-2 fs^-1)
 
         for i in range(self.num_slices):
             ds_tot_i = self.slice_property_list[i].ds_up + self.slice_property_list[i].ds_dn
 
             # (eV nm^-2 fs^-1)
             power_i = \
-                -fluence * \
-                math.exp(-self.slice_length * i / penetration_depth) * \
-                (math.exp(-self.slice_length / penetration_depth) - 1.0)
+                -self.fluence * \
+                math.exp(-self.slice_length * i / self.penetration_depth) * \
+                (math.exp(-self.slice_length / self.penetration_depth) - 1.0)
 
-            excited_packets_i = power_i * self.dt / (photon_energy * electrons_per_packet)  # (1), NOT a natural number
+            excited_packets_i = power_i * self.dt / (self.photon_energy * self.electrons_per_packet)  # (1), NOT a natural number
             excited_packets_i_up = round(
                 excited_packets_i * self.slice_property_list[i].ds_up / ds_tot_i  # (1)
             )
@@ -198,7 +207,7 @@ class System:
 
                 new_packet.is_up = j < excited_packets_i_up
                 new_packet.z = self.slice_length * (i + random.random())  # (nm)
-                new_packet.vz = vf * (2.0 * random.random() - 1.0)  # (nm fs^-1)
+                new_packet.vz = self.vf * (2.0 * random.random() - 1.0)  # (nm fs^-1)
 
                 new_hot_list.append(new_packet)
 
@@ -207,7 +216,7 @@ class System:
         # apply the change in number of thermal electrons caused by excitation and decay
         for i in range(self.num_slices):
             self.gamma_list[i] += \
-                electrons_per_packet * (
+                self.electrons_per_packet * (
                     -excited_packets_up[i] / self.slice_property_list[i].ds_up +
                     excited_packets_dn[i] / self.slice_property_list[i].ds_dn
                 ) / self.slice_length  # (eV)
@@ -220,9 +229,9 @@ class System:
         for packet in self.hot_list:
             slice_index = math.floor(packet.z / self.slice_length)
             if packet.is_up:
-                hot_up[slice_index] += electrons_per_packet / self.slice_length
+                hot_up[slice_index] += self.electrons_per_packet / self.slice_length
             else:
-                hot_dn[slice_index] += electrons_per_packet / self.slice_length
+                hot_dn[slice_index] += self.electrons_per_packet / self.slice_length
 
         hot_tot = [0] * self.num_slices  # (nm^-3)
         mu0_hot_up = [0.0] * self.num_slices  # (eV)
@@ -267,7 +276,8 @@ class System:
     def plot(self):
         (ticks_slices, ticks_planes) = self.make_ticks()
 
-        (gamma, mu0_up, mu0_dn, hot_up, hot_dn, mu0_hot_up, mu0_hot_dn, j_hot, j_up, j_dn) = states[n]
+        (gamma, mu0_up, mu0_dn, hot_up, hot_dn, mu0_hot_up, mu0_hot_dn, j_hot_up, j_hot_dn,
+         j_up, j_dn, j_spin) = self.make_data()
 
         plt.figure(figsize=(9, 9))
 
@@ -294,7 +304,7 @@ class System:
 def make_system():
     system = System()
 
-    N = 25
+    N = 30
 
     system.num_slices = 2 * N
     system.slice_length = 15.0 / N  # (nm)
@@ -324,6 +334,17 @@ def make_system():
     system.plane_property_list = [plane_properties_1] * N
     system.plane_property_list.extend([plane_properties_2] * (N - 1))
 
-    system.dt = 0.25
+    system.dt = 0.5
+
+    system.t0 = 10.0  # (fs)
+    system.pulse_duration = 5.0  # (fs)
+    system.peak_power = 5.0  # (eV nm^-2 fs^-1)
+    system.penetration_depth: float = 5.0  # (nm)
+    system.photon_energy = 1.0  # (eV)
+
+    system.electrons_per_packet = 0.001  # (nm^-2)
+    system.vf = 1.0  # (nm fs^-1)
+    system.lifetime_up = 20.0  # (fs)
+    system.lifetime_dn = 10.0  # (fs)
 
     return system
