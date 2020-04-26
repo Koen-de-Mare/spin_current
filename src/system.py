@@ -180,7 +180,6 @@ class System:
 
         # excitation
         self.fluence = self.peak_power * math.exp(-math.pow((self.t - self.t0) / self.pulse_duration, 2))
-        #fluence = 5.0 * math.exp(-self.t / self.pulse_length)  # (eV nm^-2 fs^-1)
 
         for i in range(self.num_slices):
             ds_tot_i = self.slice_property_list[i].ds_up + self.slice_property_list[i].ds_dn
@@ -191,7 +190,8 @@ class System:
                 math.exp(-self.slice_length * i / self.penetration_depth) * \
                 (math.exp(-self.slice_length / self.penetration_depth) - 1.0)
 
-            excited_packets_i = power_i * self.dt / (self.photon_energy * self.electrons_per_packet)  # (1), NOT a natural number
+            excited_packets_i = \
+                power_i * self.dt / (self.photon_energy * self.electrons_per_packet)  # (1), NOT a natural number
             excited_packets_i_up = round(
                 excited_packets_i * self.slice_property_list[i].ds_up / ds_tot_i  # (1)
             )
@@ -260,7 +260,15 @@ class System:
         for i in range(self.num_slices - 1):
             j_spin[i] = self.j_hot_up[i] + self.j_up[i] - self.j_hot_dn[i] - self.j_dn[i]  # (nm^-2 fs^-1)
 
-        return (self.gamma_list.copy(), mu0_up, mu0_dn, hot_up, hot_dn, mu0_hot_up, mu0_hot_dn, self.j_hot_up, self.j_hot_dn, self.j_up, self.j_dn, j_spin)
+        return \
+            self.t, \
+            self.gamma_list.copy(), \
+            mu0_up, mu0_dn, \
+            hot_up, hot_dn, \
+            mu0_hot_up, mu0_hot_dn, \
+            self.j_hot_up, self.j_hot_dn, \
+            self.j_up, self.j_dn, \
+            j_spin
 
     def make_ticks(self):
         ticks_slices = []
@@ -300,51 +308,3 @@ class System:
         plt.axis([0, self.num_slices * self.slice_length, -0.1, 0.1])
 
         plt.show()
-
-def make_system():
-    system = System()
-
-    N = 30
-
-    system.num_slices = 2 * N
-    system.slice_length = 15.0 / N  # (nm)
-    system.gamma_list = [0.0] * system.num_slices
-
-    slice_properties_1 = SliceProperties()
-    slice_properties_1.ds_up = 70.0  # (eV^-1 nm^-3)
-    slice_properties_1.ds_dn = 30.0  # (eV^-1 nm^-3)
-    slice_properties_1.tau = 100  # (NOT fs)
-
-    slice_properties_2 = SliceProperties()
-    slice_properties_2.ds_up = 30.0  # (eV^-1 nm^-3)
-    slice_properties_2.ds_dn = 30.0  # (eV^-1 nm^-3)
-    slice_properties_2.tau = 100  # (NOT fs)
-
-    plane_properties_1 = PlaneProperties()
-    plane_properties_1.alpha_up = 12.0  # (eV^-1 nm^-1 fs^-1)
-    plane_properties_1.alpha_dn = 2.0  # (eV^-1 nm^-1 fs^-1)
-
-    plane_properties_2 = PlaneProperties()
-    plane_properties_2.alpha_up = 0.4  # (eV^-1 nm^-1 fs^-1)
-    plane_properties_2.alpha_dn = 0.4  # (eV^-1 nm^-1 fs^-1)
-
-    system.slice_property_list = [slice_properties_1] * N
-    system.slice_property_list.extend([slice_properties_2] * N)
-
-    system.plane_property_list = [plane_properties_1] * N
-    system.plane_property_list.extend([plane_properties_2] * (N - 1))
-
-    system.dt = 0.5
-
-    system.t0 = 10.0  # (fs)
-    system.pulse_duration = 5.0  # (fs)
-    system.peak_power = 5.0  # (eV nm^-2 fs^-1)
-    system.penetration_depth: float = 5.0  # (nm)
-    system.photon_energy = 1.0  # (eV)
-
-    system.electrons_per_packet = 0.001  # (nm^-2)
-    system.vf = 1.0  # (nm fs^-1)
-    system.lifetime_up = 20.0  # (fs)
-    system.lifetime_dn = 10.0  # (fs)
-
-    return system

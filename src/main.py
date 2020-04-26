@@ -1,16 +1,15 @@
-#import matplotlib.pyplot as plt
-#plt.plot([1, 2, 3, 4], [1, 8, 27, 64])
-#plt.ylabel('some numbers')
-#plt.show()
+from src.system import System
+from src.animate import animate
+from src.simulate import simulate
 
-from src.system import *
+from src.systems.system_a import make_system_a
 
-sys = make_system()
-#sys.gamma_list[40] = 0.01
+h_target = 0.5  # (nm)
+dt = 0.5  # (fs)
+electrons_per_packet = 0.001  # (nm^-2)
 
-print(sys.stability())
+system: System = make_system_a(h, dt, electrons_per_packet)
 
-for i in range(10):
-    for j in range(5):
-        sys.step()
-    sys.plot()
+state_list = simulate(system, 50.0)
+
+animate(system, state_list, 5.0)
