@@ -1,5 +1,6 @@
 from src.system import *
 
+# THIS CODE IS FINAL, to change parts of it, just copy it to a new system
 
 def make_system_a(h, dt, electrons_per_packet):
     system = System()
