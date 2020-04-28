@@ -48,6 +48,7 @@ class System:
         self.num_slices = 0  # (1)
         self.slice_length: float = 0.0  # (nm)
         self.dt: float = 0.0  # (fs)
+        self.substeps = 1
 
         # material properties
         self.slice_property_list: [SliceProperties] = []
@@ -107,57 +108,58 @@ class System:
                     self.j_hot_dn[j] += sign * self.electrons_per_packet / self.dt  # (nm^-2 fs^-1)
 
         # motion of thermal electrons ----------------------------------------------------------------------------------
-        self.j_cold_up_0 = [0.0] * (self.num_slices - 1)  # (nm^-2 fs^-1)
-        self.j_cold_dn_0 = [0.0] * (self.num_slices - 1)  # (nm^-2 fs^-1)
-        self.j_cold_up = [0.0] * (self.num_slices - 1)  # (nm^-2 fs^-1)
-        self.j_cold_dn = [0.0] * (self.num_slices - 1)  # (nm^-2 fs^-1)
+        for _ in range(self.substeps):
+            self.j_cold_up_0 = [0.0] * (self.num_slices - 1)  # (nm^-2 fs^-1)
+            self.j_cold_dn_0 = [0.0] * (self.num_slices - 1)  # (nm^-2 fs^-1)
+            self.j_cold_up = [0.0] * (self.num_slices - 1)  # (nm^-2 fs^-1)
+            self.j_cold_dn = [0.0] * (self.num_slices - 1)  # (nm^-2 fs^-1)
 
-        for i in range(self.num_slices - 1):
-            j_up_0_i = -self.plane_property_list[i].alpha_up * (
-                    self.gamma_list[i+1] * self.slice_property_list[i+1].ds_dn /
-                        (self.slice_property_list[i+1].ds_up + self.slice_property_list[i+1].ds_dn) -
-                    self.gamma_list[ i ] * self.slice_property_list[ i ].ds_dn /
-                        (self.slice_property_list[ i ].ds_up + self.slice_property_list[ i ].ds_dn)
-                ) / self.slice_length  # (fs^-1 nm^-2)
-            j_dn_0_i = +self.plane_property_list[i].alpha_dn * (
-                    self.gamma_list[i+1] * self.slice_property_list[i+1].ds_up /
-                        (self.slice_property_list[i+1].ds_up + self.slice_property_list[i+1].ds_dn) -
-                    self.gamma_list[ i ] * self.slice_property_list[ i ].ds_up /
-                        (self.slice_property_list[ i ].ds_up + self.slice_property_list[ i ].ds_dn)
-                ) / self.slice_length  # (fs^-1 nm^-2)
+            for i in range(self.num_slices - 1):
+                j_up_0_i = -self.plane_property_list[i].alpha_up * (
+                        self.gamma_list[i+1] * self.slice_property_list[i+1].ds_dn /
+                            (self.slice_property_list[i+1].ds_up + self.slice_property_list[i+1].ds_dn) -
+                        self.gamma_list[ i ] * self.slice_property_list[ i ].ds_dn /
+                            (self.slice_property_list[ i ].ds_up + self.slice_property_list[ i ].ds_dn)
+                    ) / self.slice_length  # (fs^-1 nm^-2)
+                j_dn_0_i = +self.plane_property_list[i].alpha_dn * (
+                        self.gamma_list[i+1] * self.slice_property_list[i+1].ds_up /
+                            (self.slice_property_list[i+1].ds_up + self.slice_property_list[i+1].ds_dn) -
+                        self.gamma_list[ i ] * self.slice_property_list[ i ].ds_up /
+                            (self.slice_property_list[ i ].ds_up + self.slice_property_list[ i ].ds_dn)
+                    ) / self.slice_length  # (fs^-1 nm^-2)
 
-            self.j_cold_up_0[i] = j_up_0_i
-            self.j_cold_dn_0[i] = j_dn_0_i
+                self.j_cold_up_0[i] = j_up_0_i
+                self.j_cold_dn_0[i] = j_dn_0_i
 
-            ee_i = \
-                (j_up_0_i + j_dn_0_i + self.j_hot_up[i] + self.j_hot_dn[i]) / \
-                (self.plane_property_list[i].alpha_up + self.plane_property_list[i].alpha_dn)  # (eV nm^-1)
+                ee_i = \
+                    (j_up_0_i + j_dn_0_i + self.j_hot_up[i] + self.j_hot_dn[i]) / \
+                    (self.plane_property_list[i].alpha_up + self.plane_property_list[i].alpha_dn)  # (eV nm^-1)
 
-            self.j_cold_up[i] = j_up_0_i - self.plane_property_list[i].alpha_up * ee_i  # (fs^-1 nm^-2)
-            self.j_cold_dn[i] = j_dn_0_i - self.plane_property_list[i].alpha_dn * ee_i  # (fs^-1 nm^-2)
+                self.j_cold_up[i] = j_up_0_i - self.plane_property_list[i].alpha_up * ee_i  # (fs^-1 nm^-2)
+                self.j_cold_dn[i] = j_dn_0_i - self.plane_property_list[i].alpha_dn * ee_i  # (fs^-1 nm^-2)
 
-        # time derivative of gamma
-        gamma_dot = [0.0] * self.num_slices  # (eV fs^-1)
+            # time derivative of gamma
+            gamma_dot = [0.0] * self.num_slices  # (eV fs^-1)
 
-        for i in range(self.num_slices):
-            gamma_dot[i] -= self.gamma_list[i] * (
-                1.0 / self.slice_property_list[i].ds_up + 1.0 / self.slice_property_list[i].ds_dn
-            ) / self.slice_property_list[i].tau  # (eV fs^-1)
+            for i in range(self.num_slices):
+                gamma_dot[i] -= self.gamma_list[i] * (
+                    1.0 / self.slice_property_list[i].ds_up + 1.0 / self.slice_property_list[i].ds_dn
+                ) / self.slice_property_list[i].tau  # (eV fs^-1)
 
-        for i in range(self.num_slices - 1):
-            gamma_dot[i] += \
-                (
-                    -self.j_cold_up[i] / self.slice_property_list[i].ds_up +
-                     self.j_cold_dn[i] / self.slice_property_list[i].ds_dn
-                ) / self.slice_length  # (eV fs^-1)
-            gamma_dot[i + 1] += \
-                (
-                    self.j_cold_up[i] / self.slice_property_list[i+1].ds_up -
-                    self.j_cold_dn[i] / self.slice_property_list[i+1].ds_dn
-                ) / self.slice_length  # (eV fs^-1)
+            for i in range(self.num_slices - 1):
+                gamma_dot[i] += \
+                    (
+                        -self.j_cold_up[i] / self.slice_property_list[i].ds_up +
+                         self.j_cold_dn[i] / self.slice_property_list[i].ds_dn
+                    ) / self.slice_length  # (eV fs^-1)
+                gamma_dot[i + 1] += \
+                    (
+                        self.j_cold_up[i] / self.slice_property_list[i+1].ds_up -
+                        self.j_cold_dn[i] / self.slice_property_list[i+1].ds_dn
+                    ) / self.slice_length  # (eV fs^-1)
 
-        for i in range(0, self.num_slices):
-            self.gamma_list[i] += self.dt * gamma_dot[i]  # (eV)
+            for i in range(0, self.num_slices):
+                self.gamma_list[i] += gamma_dot[i] * self.dt / self.substeps  # (eV)
 
         # excitation and decay of hot electrons ------------------------------------------------------------------------
 

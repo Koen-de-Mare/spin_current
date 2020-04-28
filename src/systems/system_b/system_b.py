@@ -3,11 +3,12 @@ from src.system import *
 # THIS CODE IS FINAL, to change parts of it, just copy it to a new system
 # variation of system a with a much longer NM layer
 
-def make_system_b(h, dt, electrons_per_packet):
+def make_system_b(h, dt, substeps, electrons_per_packet):
     system = System()
 
     # discretization parameters
     system.dt = dt
+    system.substeps = substeps
     system.electrons_per_packet = electrons_per_packet  # (nm^-2)
 
     N = round(100.0 / h)

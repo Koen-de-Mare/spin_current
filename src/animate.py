@@ -37,7 +37,7 @@ def animate(system: System, data, speed, zmin, zmax):
     line2, = ax2.plot([], [], color="b")
     #line3, = ax2.plot([], [], color="y")
 
-    ax4.set_xlim(zmin, zmax)
+    ax3.set_xlim(zmin, zmax)
     ax3.set_ylim(-0.1, 0.1)
     ax3.set_ylabel("mu_0 dn\n(eV)")
     ax3.axhline(y=0, color='g')
