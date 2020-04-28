@@ -37,8 +37,11 @@ class System:
         # state dynamics
         self.j_hot_up: [float] = []  # (nm^-2 fs^-1)
         self.j_hot_dn: [float] = []  # (nm^-2 fs^-1)
-        self.j_up: [float] = []  # (nm^-2 fs^-1)
-        self.j_dn: [float] = []  # (nm^-2 fs^-1)
+        self.j_cold_up: [float] = []  # (nm^-2 fs^-1)
+        self.j_cold_dn: [float] = []  # (nm^-2 fs^-1)
+        self.j_cold_up_0: [float] = []  # (nm^-2 fs^-1)
+        self.j_cold_dn_0: [float] = []  # (nm^-2 fs^-1)
+
         self.fluence: float = 0.0  # (eV nm^-2 fs^-1)
 
         # simulation properties
@@ -104,8 +107,10 @@ class System:
                     self.j_hot_dn[j] += sign * self.electrons_per_packet / self.dt  # (nm^-2 fs^-1)
 
         # motion of thermal electrons ----------------------------------------------------------------------------------
-        self.j_up = [0.0] * (self.num_slices - 1)  # (nm^-2 fs^-1)
-        self.j_dn = [0.0] * (self.num_slices - 1)  # (nm^-2 fs^-1)
+        self.j_cold_up_0 = [0.0] * (self.num_slices - 1)  # (nm^-2 fs^-1)
+        self.j_cold_dn_0 = [0.0] * (self.num_slices - 1)  # (nm^-2 fs^-1)
+        self.j_cold_up = [0.0] * (self.num_slices - 1)  # (nm^-2 fs^-1)
+        self.j_cold_dn = [0.0] * (self.num_slices - 1)  # (nm^-2 fs^-1)
 
         for i in range(self.num_slices - 1):
             j_up_0_i = -self.plane_property_list[i].alpha_up * (
@@ -121,12 +126,15 @@ class System:
                         (self.slice_property_list[ i ].ds_up + self.slice_property_list[ i ].ds_dn)
                 ) / self.slice_length  # (fs^-1 nm^-2)
 
+            self.j_cold_up_0[i] = j_up_0_i
+            self.j_cold_dn_0[i] = j_dn_0_i
+
             ee_i = \
                 (j_up_0_i + j_dn_0_i + self.j_hot_up[i] + self.j_hot_dn[i]) / \
                 (self.plane_property_list[i].alpha_up + self.plane_property_list[i].alpha_dn)  # (eV nm^-1)
 
-            self.j_up[i] = j_up_0_i - self.plane_property_list[i].alpha_up * ee_i  # (fs^-1 nm^-2)
-            self.j_dn[i] = j_dn_0_i - self.plane_property_list[i].alpha_dn * ee_i  # (fs^-1 nm^-2)
+            self.j_cold_up[i] = j_up_0_i - self.plane_property_list[i].alpha_up * ee_i  # (fs^-1 nm^-2)
+            self.j_cold_dn[i] = j_dn_0_i - self.plane_property_list[i].alpha_dn * ee_i  # (fs^-1 nm^-2)
 
         # time derivative of gamma
         gamma_dot = [0.0] * self.num_slices  # (eV fs^-1)
@@ -139,13 +147,13 @@ class System:
         for i in range(self.num_slices - 1):
             gamma_dot[i] += \
                 (
-                    -self.j_up[i] / self.slice_property_list[i].ds_up +
-                     self.j_dn[i] / self.slice_property_list[i].ds_dn
+                    -self.j_cold_up[i] / self.slice_property_list[i].ds_up +
+                     self.j_cold_dn[i] / self.slice_property_list[i].ds_dn
                 ) / self.slice_length  # (eV fs^-1)
             gamma_dot[i + 1] += \
                 (
-                    self.j_up[i] / self.slice_property_list[i+1].ds_up -
-                    self.j_dn[i] / self.slice_property_list[i+1].ds_dn
+                    self.j_cold_up[i] / self.slice_property_list[i+1].ds_up -
+                    self.j_cold_dn[i] / self.slice_property_list[i+1].ds_dn
                 ) / self.slice_length  # (eV fs^-1)
 
         for i in range(0, self.num_slices):
@@ -258,7 +266,7 @@ class System:
         j_spin = [0.0] * (self.num_slices - 1)  # (nm^-2 fs^-1)
 
         for i in range(self.num_slices - 1):
-            j_spin[i] = self.j_hot_up[i] + self.j_up[i] - self.j_hot_dn[i] - self.j_dn[i]  # (nm^-2 fs^-1)
+            j_spin[i] = self.j_hot_up[i] + self.j_cold_up[i] - self.j_hot_dn[i] - self.j_cold_dn[i]  # (nm^-2 fs^-1)
 
         return \
             self.t, \
@@ -267,7 +275,7 @@ class System:
             hot_up, hot_dn, \
             mu0_hot_up, mu0_hot_dn, \
             self.j_hot_up, self.j_hot_dn, \
-            self.j_up, self.j_dn, \
+            self.j_cold_up, self.j_cold_dn, \
             j_spin
 
     def make_ticks(self):
