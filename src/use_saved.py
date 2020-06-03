@@ -14,14 +14,14 @@ state_list = pickle.load(open("state_list.p", 'rb'))
 
 print("system made")
 
-#animate(system, state_list, 10.0, 0.0, 100.0)
+animate(system, state_list, 10.0, 0.0, 100.0)
 
 #r, theta = injected(system, state_list, 20.0, 0.01)
 #print(r)
 #print(theta)
 
-#z = 30.0
-#plot_spin_current(system, state_list, z, False)
+#z = 17.0
+#plot_spin_current(system, state_list, z, True)
 #plot_fourier(system, state_list, z, 0.1)
 
-total_transfer_depthresolved(system, state_list, 15.0, 30.0, 0.01)
+#total_transfer_depthresolved(system, state_list, 15.0, 40.0, 0.01)

@@ -1,7 +1,5 @@
 from src.system import *
 
-# THIS CODE IS FINAL, to change parts of it, just copy it to a new system
-# variation of system a with a much longer NM layer
 
 def make_system_c(h, dt, substeps, electrons_per_packet):
     system = System()
@@ -48,14 +46,14 @@ def make_system_c(h, dt, substeps, electrons_per_packet):
 
     # laser properties
     system.t0 = 10.0  # (fs)
-    system.pulse_duration = 15.0  # (fs)
+    system.pulse_duration = 20.0  # (fs), t_fwhm = 2 * sqrt(ln(2)) * pulse_duration = 1.6651 * pulse_duration
     system.peak_power = 5.0  # (eV nm^-2 fs^-1)
     system.penetration_depth: float = 5.0  # (nm)
     system.photon_energy = 1.0  # (eV)
 
     # hot electron properties
     system.vf = 1.0  # (nm fs^-1)
-    system.lifetime_up = 20.0  # (fs)
-    system.lifetime_dn = 10.0  # (fs)
+    system.lifetime_up = 10.0  # (fs)
+    system.lifetime_dn = 5.0  # (fs)
 
     return system
