@@ -17,6 +17,9 @@ class SliceProperties:
         self.ds_dn = 0  # (eV^-1 nm^-3
         self.tau = 0  # (fs)
 
+        self.lifetime_up = 0  # (fs)
+        self.lifetime_dn = 0  # (fs)
+
     def timescale(self) -> float:
         return self.tau * self.ds_up * self.ds_dn / (self.ds_up + self.ds_dn)  # (fs)
 
@@ -57,8 +60,6 @@ class System:
         # ballistic electron properties
         self.electrons_per_packet:float = 0.0  # (nm^-2)
         self.vf: float = 0.0  # (nm fs^-1)
-        self.lifetime_up: float = 0.0  # (fs)
-        self.lifetime_dn: float = 0.0  # (fs)
 
         # laser properties
         self.t0 = 0.0  # (fs)
@@ -170,17 +171,17 @@ class System:
         # decay
         for i in range(len(self.hot_list)):
             lifetime = 0
+            slice_index = math.floor(self.hot_list[i].z / self.slice_length)
             if self.hot_list[i].is_up:
-                lifetime = self.lifetime_up  # (fs)
+                lifetime = self.slice_property_list[slice_index].lifetime_up  # (fs)
             else:
-                lifetime = self.lifetime_dn  # (fs)
+                lifetime = self.slice_property_list[slice_index].lifetime_dn  # (fs)
 
             if random.random() < math.exp(-self.dt / lifetime):
                 # keep packet
                 new_hot_list.append(self.hot_list[i])
             else:
                 # remove packet
-                slice_index = math.floor(self.hot_list[i].z / self.slice_length)
                 if self.hot_list[i].is_up:
                     excited_packets_up[slice_index] -= 1  # (1)
                 else:

@@ -8,13 +8,16 @@ from src.plot_spin_current import plot_spin_current
 from src.injected import injected
 from src.plot_fourier import plot_fourier
 from src.total_transfer_depthresolved import total_transfer_depthresolved
+from src.plot_gamma import plot_gamma
 
 system = pickle.load(open("system.p", 'rb'))
 state_list = pickle.load(open("state_list.p", 'rb'))
 
 print("system made")
 
-animate(system, state_list, 10.0, 0.0, 100.0)
+#animate(system, state_list, 10.0, 0.0, 200.0)
+
+plot_gamma(system, state_list, 80.0, 0.0, 40.0)
 
 #r, theta = injected(system, state_list, 20.0, 0.01)
 #print(r)

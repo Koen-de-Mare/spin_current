@@ -22,7 +22,7 @@ state_list = simulate(system, 200.0)
 pickle.dump(system,     open("system.p", 'wb'))
 pickle.dump(state_list, open("state_list.p", 'wb'))
 
-#animate(system, state_list, 10.0, 0.0, 20.0)
+animate(system, state_list, 10.0, 0.0, 40.0)
 
 #plot_spin_current(system, state_list, 16.0, False)
 #total_transfer_depthresolved(system, state_list, 15.0, 30.0, 0.01)
