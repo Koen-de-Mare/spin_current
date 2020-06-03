@@ -23,12 +23,12 @@ def make_system_c(h, dt, substeps, electrons_per_packet):
     slice_properties_1 = SliceProperties()
     slice_properties_1.ds_up = 80.0  # (eV^-1 nm^-3)
     slice_properties_1.ds_dn = 20.0  # (eV^-1 nm^-3)
-    slice_properties_1.tau = 100  # (NOT fs)
+    slice_properties_1.tau = 10000  # (fs)
 
     slice_properties_2 = SliceProperties()
     slice_properties_2.ds_up = 30.0  # (eV^-1 nm^-3)
     slice_properties_2.ds_dn = 30.0  # (eV^-1 nm^-3)
-    slice_properties_2.tau = 100  # (NOT fs)
+    slice_properties_2.tau = 10000  # (fs)
 
     plane_properties_1 = PlaneProperties()
     plane_properties_1.alpha_up = 6.0  # (eV^-1 nm^-1 fs^-1)

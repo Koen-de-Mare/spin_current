@@ -15,7 +15,7 @@ class SliceProperties:
     def __init__(self):
         self.ds_up = 0  # (eV^-1 nm^-3)
         self.ds_dn = 0  # (eV^-1 nm^-3
-        self.tau = 0  # (eV nm^3 fs)
+        self.tau = 0  # (fs)
 
     def timescale(self) -> float:
         return self.tau * self.ds_up * self.ds_dn / (self.ds_up + self.ds_dn)  # (fs)
@@ -30,7 +30,7 @@ class PlaneProperties:
 class System:
     def __init__(self):
         # state
-        self.gamma_list: [float] = []  # (eV)
+        self.gamma_list: [float] = []  # (eV), called mu_s in documentation
         self.t: float = 0.0  # (fs)
         self.hot_list = []
 
@@ -142,9 +142,7 @@ class System:
             gamma_dot = [0.0] * self.num_slices  # (eV fs^-1)
 
             for i in range(self.num_slices):
-                gamma_dot[i] -= self.gamma_list[i] * (
-                    1.0 / self.slice_property_list[i].ds_up + 1.0 / self.slice_property_list[i].ds_dn
-                ) / self.slice_property_list[i].tau  # (eV fs^-1)
+                gamma_dot[i] -= self.gamma_list[i] / self.slice_property_list[i].tau  # (eV fs^-1)
 
             for i in range(self.num_slices - 1):
                 gamma_dot[i] += \
