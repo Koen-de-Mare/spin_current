@@ -17,7 +17,7 @@ print("system made")
 
 #animate(system, state_list, 10.0, 0.0, 200.0)
 
-plot_gamma(system, state_list, 80.0, 0.0, 40.0)
+plot_gamma(system, state_list, 80.0, 0.0, 40.0, -0.8, 0.2)
 
 #r, theta = injected(system, state_list, 20.0, 0.01)
 #print(r)

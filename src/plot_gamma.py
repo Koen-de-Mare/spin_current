@@ -7,7 +7,7 @@ import math
 from src.system import System
 
 
-def plot_gamma(system: System, state_list, t_goal: float, zmin: float, zmax: float):
+def plot_gamma(system: System, state_list, t_goal: float, zmin: float, zmax: float, gamma_min: float, gamma_max: float):
     i_best: int = 0
     cost: float = math.inf
 
@@ -30,12 +30,13 @@ def plot_gamma(system: System, state_list, t_goal: float, zmin: float, zmax: flo
 
     plt.plot(ticks_slices, gamma)
     plt.xlim([zmin, zmax])
-    plt.ylabel('gamma (eV)')
+    plt.ylim([gamma_min, gamma_max])
+    plt.ylabel('mu_s (eV)')
     plt.xlabel('z (nm)')
     plt.grid(True)
 
     title = 'gamma at = {} fs'.format(t)
-    plt.suptitle(title)
+    #plt.suptitle(title)
 
     plt.show()
 
