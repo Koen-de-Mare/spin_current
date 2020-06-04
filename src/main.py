@@ -13,7 +13,7 @@ from src.systems.system_c import make_system_c
 h_target = 0.25  # (nm)
 dt = 0.5  # (fs)
 substeps = 10
-electrons_per_packet = 0.001  # (nm^-2)
+electrons_per_packet = 0.0001  # (nm^-2)
 
 system: System = make_system_c(h_target, dt, substeps, electrons_per_packet)
 

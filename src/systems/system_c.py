@@ -47,16 +47,16 @@ def make_system_c(h, dt, substeps, electrons_per_packet):
     plane_properties_1 = PlaneProperties()
 
     # case 1
-    #plane_properties_1.alpha_up = 8.0  # (eV^-1 nm^-1 fs^-1)
-    #plane_properties_1.alpha_dn = 2.0  # (eV^-1 nm^-1 fs^-1)
+    plane_properties_1.alpha_up = 8.0  # (eV^-1 nm^-1 fs^-1)
+    plane_properties_1.alpha_dn = 2.0  # (eV^-1 nm^-1 fs^-1)
 
     # case 2
     #plane_properties_1.alpha_up = 9.0  # (eV^-1 nm^-1 fs^-1)
     #plane_properties_1.alpha_dn = 1.0  # (eV^-1 nm^-1 fs^-1)
 
     # case 3
-    plane_properties_1.alpha_up = 7.0  # (eV^-1 nm^-1 fs^-1)
-    plane_properties_1.alpha_dn = 3.0  # (eV^-1 nm^-1 fs^-1)
+    #plane_properties_1.alpha_up = 7.0  # (eV^-1 nm^-1 fs^-1)
+    #plane_properties_1.alpha_dn = 3.0  # (eV^-1 nm^-1 fs^-1)
 
     plane_properties_2 = PlaneProperties()
     plane_properties_2.alpha_up = 0.4  # (eV^-1 nm^-1 fs^-1)
