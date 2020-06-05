@@ -53,6 +53,8 @@ def plot_spin_current(system: System,  state_list, z: float, hot_resolved: bool)
         plt.plot(time_list, spin_current_tot)
         plt.ylabel('j_spin (nm^-2 fs^-1)')
         plt.xlabel('t (fs)')
+        plt.xlim([0, 300.0])
+        plt.ylim([0.0, 1.2])
         plt.grid(True)
 
         plt.show()

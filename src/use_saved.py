@@ -17,7 +17,7 @@ print("system made")
 
 #animate(system, state_list, 10.0, 0.0, 200.0)
 
-plot_gamma(system, state_list, 150.0, 0.0, 40.0, -0.8, 0.2)
+plot_gamma(system, state_list, 150.0, 0.0, 40.0, -1.0, 0.2)
 
 plot_spin_current(system, state_list, 40.0, False)
 plot_spin_current(system, state_list, 50.0, False)
