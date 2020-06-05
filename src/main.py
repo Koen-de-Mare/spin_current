@@ -17,7 +17,7 @@ electrons_per_packet = 0.0001  # (nm^-2)
 
 system: System = make_system_c(h_target, dt, substeps, electrons_per_packet)
 
-state_list = simulate(system, 200.0)
+state_list = simulate(system, 300.0)
 
 pickle.dump(system,     open("system.p", 'wb'))
 pickle.dump(state_list, open("state_list.p", 'wb'))

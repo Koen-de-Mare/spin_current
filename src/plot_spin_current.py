@@ -47,8 +47,8 @@ def plot_spin_current(system: System,  state_list, z: float, hot_resolved: bool)
     else:
         plt.figure()
 
-        title = 'spin current at z = {} nm'.format(z)
-        plt.title(title)
+        #title = 'spin current at z = {} nm'.format(z)
+        #plt.title(title)
 
         plt.plot(time_list, spin_current_tot)
         plt.ylabel('j_spin (nm^-2 fs^-1)')

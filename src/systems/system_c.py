@@ -16,8 +16,8 @@ def make_system_c(h, dt, substeps, electrons_per_packet):
     N1 = round(N * 0.30)
     N2 = N - N1
 
-    N2a = round(N2 / 2)
-    N2b = N2 - N2a
+    N2b = round(N2 / 10)
+    N2a = N2 - N2b
 
     # initial state
     system.gamma_list = [0.0] * system.num_slices
@@ -41,8 +41,8 @@ def make_system_c(h, dt, substeps, electrons_per_packet):
     slice_properties_2b.ds_up = 30.0  # (eV^-1 nm^-3)
     slice_properties_2b.ds_dn = 30.0  # (eV^-1 nm^-3)
     slice_properties_2b.tau = 10000.0  # (fs)
-    slice_properties_2b.lifetime_up = 10.0  # (fs)
-    slice_properties_2b.lifetime_dn = 10.0  # (fs)
+    slice_properties_2b.lifetime_up = 1.0  # (fs)
+    slice_properties_2b.lifetime_dn = 1.0  # (fs)
 
     plane_properties_1 = PlaneProperties()
 
@@ -70,7 +70,7 @@ def make_system_c(h, dt, substeps, electrons_per_packet):
     system.plane_property_list.extend([plane_properties_2] * (N2 - 1))
 
     # laser properties
-    system.t0 = 10.0  # (fs)
+    system.t0 = 50.0  # (fs)
     system.pulse_duration = 20.0  # (fs), t_fwhm = 2 * sqrt(ln(2)) * pulse_duration = 1.6651 * pulse_duration
     system.peak_power = 5.0  # (eV nm^-2 fs^-1)
     system.penetration_depth: float = 5.0  # (nm)
