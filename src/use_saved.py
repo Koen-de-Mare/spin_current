@@ -17,14 +17,14 @@ print("system made")
 
 #animate(system, state_list, 10.0, 0.0, 200.0)
 
-plot_gamma(system, state_list, 150.0, 0.0, 40.0, -1.0, 0.2)
+#plot_gamma(system, state_list, 150.0, 0.0, 40.0, -1.0, 0.2)
 
 plot_spin_current(system, state_list, 40.0, False)
 plot_spin_current(system, state_list, 50.0, False)
 plot_spin_current(system, state_list, 60.0, False)
-plot_spin_current(system, state_list, 70.0, False)
-plot_spin_current(system, state_list, 80.0, False)
-plot_spin_current(system, state_list, 90.0, False)
+#plot_spin_current(system, state_list, 70.0, False)
+#plot_spin_current(system, state_list, 80.0, False)
+#plot_spin_current(system, state_list, 90.0, False)
 
 #r, theta = injected(system, state_list, 20.0, 0.01)
 #print(r)

@@ -27,15 +27,22 @@ def make_system_c(h, dt, substeps, electrons_per_packet):
     slice_properties_1.ds_up = 80.0  # (eV^-1 nm^-3)
     slice_properties_1.ds_dn = 20.0  # (eV^-1 nm^-3)
     slice_properties_1.tau = 10000.0  # (fs)
-    slice_properties_1.lifetime_up = 10000.0  # (fs)
-    slice_properties_1.lifetime_dn = 10000.0  # (fs)
 
     slice_properties_2a = SliceProperties()
     slice_properties_2a.ds_up = 30.0  # (eV^-1 nm^-3)
     slice_properties_2a.ds_dn = 30.0  # (eV^-1 nm^-3)
     slice_properties_2a.tau = 10000.0  # (fs)
-    slice_properties_2a.lifetime_up = 10000.0  # (fs)
-    slice_properties_2a.lifetime_dn = 10000.0  # (fs)
+
+    # "infinite" hit electronlifetime
+    #slice_properties_1.lifetime_up = 10000.0  # (fs)
+    #slice_properties_1.lifetime_dn = 10000.0  # (fs)
+    #slice_properties_2a.lifetime_up = 10000.0  # (fs)
+    #slice_properties_2a.lifetime_dn = 10000.0  # (fs)
+
+    slice_properties_1.lifetime_up = 15.0  # (fs)
+    slice_properties_1.lifetime_dn = 15.0  # (fs)
+    slice_properties_2a.lifetime_up = 10.0  # (fs)
+    slice_properties_2a.lifetime_dn = 10.0  # (fs)
 
     slice_properties_2b = SliceProperties()
     slice_properties_2b.ds_up = 30.0  # (eV^-1 nm^-3)

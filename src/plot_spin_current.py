@@ -54,7 +54,7 @@ def plot_spin_current(system: System,  state_list, z: float, hot_resolved: bool)
         plt.ylabel('j_spin (nm^-2 fs^-1)')
         plt.xlabel('t (fs)')
         plt.xlim([0, 300.0])
-        plt.ylim([0.0, 1.2])
+        plt.ylim([0.0, 0.04])
         plt.grid(True)
 
         plt.show()
