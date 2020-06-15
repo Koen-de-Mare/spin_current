@@ -9,13 +9,14 @@ from src.total_transfer_depthresolved import total_transfer_depthresolved
 from src.systems.system_a import make_system_a
 from src.systems.system_b.system_b import make_system_b
 from src.systems.system_c import make_system_c
+from src.systems.system_d import make_system_d
 
 h_target = 0.25  # (nm)
 dt = 0.5  # (fs)
 substeps = 10
-electrons_per_packet = 0.00001  # (nm^-2)
+electrons_per_packet = 0.0001  # (nm^-2)
 
-system: System = make_system_c(h_target, dt, substeps, electrons_per_packet)
+system: System = make_system_d(h_target, dt, substeps, electrons_per_packet)
 
 state_list = simulate(system, 300.0)
 
