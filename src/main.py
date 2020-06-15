@@ -10,13 +10,14 @@ from src.systems.system_a import make_system_a
 from src.systems.system_b.system_b import make_system_b
 from src.systems.system_c import make_system_c
 from src.systems.system_d import make_system_d
+from src.systems.system_e import make_system_e
 
-h_target = 0.25  # (nm)
+h_target = 0.25  # (nm), 0.25
 dt = 0.5  # (fs)
-substeps = 10
-electrons_per_packet = 0.0001  # (nm^-2)
+substeps = 100
+electrons_per_packet = 0.00002  # (nm^-2), 0.0001 for spin current plots
 
-system: System = make_system_d(h_target, dt, substeps, electrons_per_packet)
+system: System = make_system_e(h_target, dt, substeps, electrons_per_packet)
 
 state_list = simulate(system, 300.0)
 
